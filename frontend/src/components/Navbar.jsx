@@ -1,9 +1,13 @@
-import { useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import api from '../services/api.js'
 import { LogoutIcon } from './Icons.jsx'
+import { useCart } from '../hooks/useCart'
 
+const navLinkCls = ({ isActive }) =>
+isActive ? 'text-green-600' : 'transition hover:text-slate-900'
 function Navbar({ customer, onProfileClick }) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { cartCount, clearCart } = useCart()
 
   const handleLogout = async () => {
     try {
@@ -11,6 +15,7 @@ function Navbar({ customer, onProfileClick }) {
     } catch (err) {
       // ignore
     }
+    clearCart()
     navigate('/login')
   }
 
@@ -36,6 +41,13 @@ function Navbar({ customer, onProfileClick }) {
         </div>
 
         <div className="flex items-center gap-4">
+                  <nav className="flex items-center gap-3 text-xs font-medium text-slate-600 sm:gap-6 sm:text-sm">
+          <NavLink to="/home" className={navLinkCls}>Home</NavLink>
+          <NavLink to="/products" className={navLinkCls}>Products</NavLink>
+          <NavLink to="/wishlist" className={navLinkCls}>Wishlist</NavLink>
+          <NavLink to="/cart" className={navLinkCls}>Cart ({cartCount})</NavLink>
+          <NavLink to="/orders" className={navLinkCls}>Orders</NavLink>
+        </nav>
           {customer && (
             <button
               onClick={onProfileClick}

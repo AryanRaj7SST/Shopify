@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import MainLayout from '../layout/MainLayout'
 import ProductCard from '../components/ProductCard'
 import Loading from '../components/Loading'
 import { useProducts } from '../hooks/useProducts'
+import { getWishlist } from '../services/api'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 
 const SORT_OPTIONS = [
@@ -21,6 +22,15 @@ export default function Products() {
     sortBy, setSortBy,
   } = useProducts()
 
+  // ids already in the wishlist, so hearts look right after a refresh
+  const [savedIds, setSavedIds] = useState(() => new Set())
+
+  useEffect(() => {
+    getWishlist()
+      .then((res) => setSavedIds(new Set(res.data.wishlist.map((p) => p._id))))
+      .catch(() => {}) // not logged in or request failed: hearts simply start empty
+  }, [])
+
   // Pick up ?search=&category=&sortBy= from links like the ones on Home
   useEffect(() => {
     const q = searchParams.get('search')
@@ -33,7 +43,7 @@ export default function Products() {
   }, [])
 
   if (loading) return <MainLayout><Loading text="Loading products…" /></MainLayout>
-  
+
   if (error) return (
     <MainLayout>
       <div className="min-h-[60vh] flex items-center justify-center text-center px-6">
@@ -94,7 +104,11 @@ export default function Products() {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
               >
-                {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                {SORT_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -113,7 +127,12 @@ export default function Products() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 xl:gap-10 mb-20">
               {filteredProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  initiallySaved={savedIds.has(product._id)}
+                  onSaved={(id) => setSavedIds((prev) => new Set(prev).add(id))}
+                />
               ))}
             </div>
           )}

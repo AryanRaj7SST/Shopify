@@ -4,6 +4,11 @@ import Register from './pages/Register.jsx'
 import Home from './pages/Home.jsx'
 import Products from './pages/Products.jsx'
 import ProductDetails from './pages/ProductDetails.jsx'
+import Wishlist from './pages/Wishlist.jsx'
+import Cart from './pages/Cart.jsx'
+import Checkout from './pages/Checkout.jsx'
+import Orders from './pages/Orders.jsx'
+import OrderDetails from './pages/OrderDetails.jsx'
 
 function App() {
   return (
@@ -14,6 +19,12 @@ function App() {
       <Route path="/home" element={<Home />} />
       <Route path="/products" element={<Products />} />
       <Route path="/products/:id" element={<ProductDetails />} />
+      <Route path="/wishlist" element={<Wishlist />} />
+      <Route path="/cart" element={<Cart />} />
+      <Route path="/checkout" element={<Checkout />} />
+      <Route path="/orders" element={<Orders />} />
+      <Route path="/orders/:id" element={<OrderDetails />} />
+      <Route path="/order-success/:id" element={<OrderDetails success />} />
     </Routes>
   )
 }

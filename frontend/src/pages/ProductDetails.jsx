@@ -1,17 +1,26 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, Truck, CreditCard, ShieldCheck, ChevronRight } from 'lucide-react'
 import MainLayout from '../layout/MainLayout'
 import Loading from '../components/Loading'
 import { getProductById } from '../services/api'
 import toast from 'react-hot-toast'
+import { useCart } from '../hooks/useCart'
 
 export default function ProductDetails() {
   const { id } = useParams()
+  const navigate = useNavigate()
+  const { addToCart, getQuantity, isPending } = useCart()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
+  const handleAddToCart = async () => {
+  const result = await addToCart(product._id)
+  if (result.ok) toast.success('Added to cart')
+  else if (result.status === 401) navigate('/login')
+  else toast.error(result.message)
+  }
   useEffect(() => {
     window.scrollTo(0, 0)
     setLoading(true)
@@ -66,11 +75,11 @@ export default function ProductDetails() {
               </p>
 
               <button
-                disabled={product.stock === 0}
-                onClick={() => toast.success('Added to cart! (cart coming in Lab-04)')}
+                disabled={product.stock === 0 || isPending(product._id) || getQuantity(product._id) >= product.stock}
+                onClick={handleAddToCart}
                 className="flex items-center gap-2 bg-slate-800 text-white px-8 py-3 rounded hover:bg-slate-900 active:scale-95 transition text-sm font-medium disabled:opacity-50"
               >
-                <ShoppingCart size={16} /> Add to Cart
+                <ShoppingCart size={16} /> {isPending(product._id) ? 'Adding...' : 'Add to Cart'}
               </button>
 
               <hr className="border-gray-200 my-6" />

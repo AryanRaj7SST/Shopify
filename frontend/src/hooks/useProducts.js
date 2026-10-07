@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { getProducts } from '../services/api'
 import { useDebounce } from './useDebounce'
 
-const CATEGORIES = ['Electronics', 'Fashion', 'Books', 'Home']
+const CATEGORIES = ['Electronics', 'Fashion', 'Home', 'Books', 'Beauty', 'Sports', 'Groceries', 'Automotive']
 
 const SORT_MAP = {
   'price-asc': 'price_asc',
