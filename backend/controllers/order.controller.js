@@ -99,9 +99,16 @@ const createPaymentOrder = async (req, res) => {
                 currency: "INR",
                 receipt: order._id.toString()
             });
-        } catch (error) {
+        }       catch (error) {
             // the pending order is useless without a payment order
             await Order.deleteOne({ _id: order._id });
+            console.error("Razorpay order creation failed:", error.error || error.message);
+
+            // Razorpay rejected our request (for example, amount too large): show its reason
+            if (error.statusCode === 400 && error.error?.description) {
+                return res.status(400).json({ success: false, message: error.error.description });
+            }
+
             return res.status(502).json({ success: false, message: "Unable to start payment. Please try again." });
         }
 
