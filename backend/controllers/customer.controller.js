@@ -2,6 +2,16 @@ const bcrypt = require("bcrypt");
 const Customer = require("../models/customer.model");
 const generateToken = require("../utils/generateToken");
 
+// Frontend and API share one domain on Vercel (API under /api), so Lax works.
+// Secure is only switched on in production because local dev runs on http.
+const isProduction = process.env.NODE_ENV === "production";
+
+const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "lax"
+};
+
 const registerCustomer = async (req, res) => {
     try {
         const { fullName, email, password, phone } = req.body;
@@ -94,7 +104,8 @@ const loginCustomer = async (req, res) => {
         const token = generateToken(customer._id);
 
         res.cookie("token", token, {
-            httpOnly: true
+            ...cookieOptions,
+            maxAge: 24 * 60 * 60 * 1000 // matches the 1 day token expiry
         });
 
         return res.status(200).json({
@@ -127,7 +138,7 @@ const getProfile = async (req, res) => {
 
 
 const logoutCustomer = (req, res) => {
-    res.clearCookie("token");
+    res.clearCookie("token", cookieOptions);
 
     return res.status(200).json({
         success: true,

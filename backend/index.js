@@ -12,28 +12,58 @@ const orderRoutes = require("./routes/order.routes");
 
 const app = express();
 
+
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+    .split(",")
+    .map((url) => url.trim().replace(/\/$/, ""));
+
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true
 }));
 
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/customers", customerRoutes);
-app.use("/products", productRoutes);
-app.use("/wishlist", wishlistRoutes); 
-app.use("/cart", cartRoutes);
-app.use("/orders", orderRoutes);
 
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => {
-        console.log("MongoDB connected");
+let connection = null;
 
-        app.listen(process.env.PORT, () => {
-            console.log(`Server running on port ${process.env.PORT}`);
+const connectDB = () => {
+    if (!connection) {
+        connection = mongoose.connect(process.env.MONGO_URI).catch((error) => {
+            connection = null; 
+            throw error;
         });
-    })
-    .catch((error) => {
+    }
+    return connection;
+};
+
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
         console.error("MongoDB connection failed:", error);
-    });
+        res.status(503).json({ success: false, message: "Database unavailable" });
+    }
+});
+
+app.use("/api/customers", customerRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/wishlist", wishlistRoutes); 
+app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
+
+// Vercel imports the app; running `node index.js` locally starts a normal server
+if (require.main === module) {
+    const PORT = process.env.PORT || 5001;
+
+    connectDB()
+        .then(() => {
+            console.log("MongoDB connected");
+            app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+        })
+        .catch(() => {});
+}
+
+module.exports = app;
